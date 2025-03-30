@@ -1,8 +1,8 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { ExpenseType, CategoryType, MonthlyTotalType } from "@/types/expense";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
+import api from "@/services/api";
 
 interface ExpenseContextType {
   expenses: ExpenseType[];
@@ -20,21 +20,11 @@ interface ExpenseContextType {
   getMonthlyTotalsByCategory: (categoryId: string) => MonthlyTotalType[];
   searchExpenses: (query: string) => ExpenseType[];
   getCategoryById: (id: string) => CategoryType | undefined;
+  loading: boolean;
 }
 
 const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined);
 
-// Default categories
-const defaultCategories: CategoryType[] = [
-  { id: "1", name: "Food", color: "#FF5733" },
-  { id: "2", name: "Transportation", color: "#33FF57" },
-  { id: "3", name: "Shopping", color: "#3357FF" },
-  { id: "4", name: "Entertainment", color: "#F033FF" },
-  { id: "5", name: "Bills", color: "#FF9933" },
-  { id: "6", name: "Other", color: "#33FFF9" },
-];
-
-// Sample expenses for demo
 const sampleExpenses: ExpenseType[] = [
   {
     id: "1",
@@ -94,110 +84,210 @@ const sampleExpenses: ExpenseType[] = [
   },
 ];
 
+const defaultCategories: CategoryType[] = [
+  { id: "1", name: "Food", color: "#FF5733" },
+  { id: "2", name: "Transportation", color: "#33FF57" },
+  { id: "3", name: "Shopping", color: "#3357FF" },
+  { id: "4", name: "Entertainment", color: "#F033FF" },
+  { id: "5", name: "Bills", color: "#FF9933" },
+  { id: "6", name: "Other", color: "#33FFF9" },
+];
+
 export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [expenses, setExpenses] = useState<ExpenseType[]>(() => {
-    const savedExpenses = localStorage.getItem("expenses");
-    return savedExpenses ? JSON.parse(savedExpenses) : sampleExpenses;
-  });
-
-  const [categories, setCategories] = useState<CategoryType[]>(() => {
-    const savedCategories = localStorage.getItem("categories");
-    return savedCategories ? JSON.parse(savedCategories) : defaultCategories;
-  });
-
+  const [expenses, setExpenses] = useState<ExpenseType[]>([]);
+  const [categories, setCategories] = useState<CategoryType[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Save to local storage whenever expenses or categories change
   useEffect(() => {
-    localStorage.setItem("expenses", JSON.stringify(expenses));
-  }, [expenses]);
-
-  useEffect(() => {
-    localStorage.setItem("categories", JSON.stringify(categories));
-  }, [categories]);
-
-  // Expense operations
-  const addExpense = (expense: Omit<ExpenseType, "id">) => {
-    const newExpense = {
-      ...expense,
-      id: Math.random().toString(36).substr(2, 9),
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        const categoryResponse = await api.get('/categories');
+        let fetchedCategories = categoryResponse.data;
+        
+        if (!fetchedCategories || fetchedCategories.length === 0) {
+          fetchedCategories = defaultCategories;
+          try {
+            await Promise.all(
+              defaultCategories.map(category => 
+                api.post('/categories', { name: category.name, color: category.color })
+              )
+            );
+          } catch (err) {
+            console.error("Error creating default categories:", err);
+          }
+        }
+        
+        setCategories(fetchedCategories);
+        
+        const expenseResponse = await api.get('/expenses');
+        let fetchedExpenses = expenseResponse.data;
+        
+        if (!fetchedExpenses || fetchedExpenses.length === 0) {
+          fetchedExpenses = sampleExpenses;
+          try {
+            await Promise.all(
+              sampleExpenses.map(expense => 
+                api.post('/expenses', { 
+                  amount: expense.amount,
+                  description: expense.description,
+                  date: expense.date,
+                  categoryId: expense.categoryId
+                })
+              )
+            );
+            fetchedExpenses = (await api.get('/expenses')).data;
+          } catch (err) {
+            console.error("Error creating sample expenses:", err);
+          }
+        }
+        
+        setExpenses(fetchedExpenses);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        
+        setCategories(defaultCategories);
+        setExpenses(sampleExpenses);
+        
+        toast({
+          title: "Connection Error",
+          description: "Using local data. Check your backend connection.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
     };
-    setExpenses([...expenses, newExpense]);
-    toast({
-      title: "Expense added",
-      description: `$${expense.amount.toFixed(2)} for ${expense.description}`,
-    });
-  };
 
-  const updateExpense = (id: string, updatedExpense: Partial<ExpenseType>) => {
-    setExpenses(
-      expenses.map((expense) =>
-        expense.id === id ? { ...expense, ...updatedExpense } : expense
-      )
-    );
-    toast({
-      title: "Expense updated",
-      description: "Your expense has been updated successfully",
-    });
-  };
+    fetchData();
+  }, [toast]);
 
-  const deleteExpense = (id: string) => {
-    setExpenses(expenses.filter((expense) => expense.id !== id));
-    toast({
-      title: "Expense deleted",
-      description: "Your expense has been deleted successfully",
-      variant: "destructive",
-    });
-  };
-
-  // Category operations
-  const addCategory = (category: Omit<CategoryType, "id">) => {
-    const newCategory = {
-      ...category,
-      id: Math.random().toString(36).substr(2, 9),
-    };
-    setCategories([...categories, newCategory]);
-    toast({
-      title: "Category added",
-      description: `New category "${category.name}" has been added`,
-    });
-  };
-
-  const updateCategory = (id: string, updatedCategory: Partial<CategoryType>) => {
-    setCategories(
-      categories.map((category) =>
-        category.id === id ? { ...category, ...updatedCategory } : category
-      )
-    );
-    toast({
-      title: "Category updated",
-      description: "Your category has been updated successfully",
-    });
-  };
-
-  const deleteCategory = (id: string) => {
-    // Check if category is in use
-    const inUse = expenses.some((expense) => expense.categoryId === id);
-    if (inUse) {
+  const addExpense = async (expense: Omit<ExpenseType, "id">) => {
+    try {
+      const response = await api.post('/expenses', expense);
+      const newExpense = response.data;
+      setExpenses([...expenses, newExpense]);
       toast({
-        title: "Cannot delete category",
-        description: "This category is still in use by some expenses",
+        title: "Expense added",
+        description: `$${expense.amount.toFixed(2)} for ${expense.description}`,
+      });
+    } catch (error) {
+      console.error("Error adding expense:", error);
+      toast({
+        title: "Error adding expense",
+        description: "Please try again later",
         variant: "destructive",
       });
-      return;
     }
-    
-    setCategories(categories.filter((category) => category.id !== id));
-    toast({
-      title: "Category deleted",
-      description: "Your category has been deleted successfully",
-      variant: "destructive",
-    });
   };
 
-  // Utility functions
+  const updateExpense = async (id: string, updatedExpense: Partial<ExpenseType>) => {
+    try {
+      const response = await api.put(`/expenses/${id}`, updatedExpense);
+      const updated = response.data;
+      setExpenses(
+        expenses.map((expense) =>
+          expense.id === id ? { ...expense, ...updated } : expense
+        )
+      );
+      toast({
+        title: "Expense updated",
+        description: "Your expense has been updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating expense:", error);
+      toast({
+        title: "Error updating expense",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteExpense = async (id: string) => {
+    try {
+      await api.delete(`/expenses/${id}`);
+      setExpenses(expenses.filter((expense) => expense.id !== id));
+      toast({
+        title: "Expense deleted",
+        description: "Your expense has been deleted successfully",
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      toast({
+        title: "Error deleting expense",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addCategory = async (category: Omit<CategoryType, "id">) => {
+    try {
+      const response = await api.post('/categories', category);
+      const newCategory = response.data;
+      setCategories([...categories, newCategory]);
+      toast({
+        title: "Category added",
+        description: `New category "${category.name}" has been added`,
+      });
+    } catch (error) {
+      console.error("Error adding category:", error);
+      toast({
+        title: "Error adding category",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateCategory = async (id: string, updatedCategory: Partial<CategoryType>) => {
+    try {
+      const response = await api.put(`/categories/${id}`, updatedCategory);
+      const updated = response.data;
+      setCategories(
+        categories.map((category) =>
+          category.id === id ? { ...category, ...updated } : category
+        )
+      );
+      toast({
+        title: "Category updated",
+        description: "Your category has been updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating category:", error);
+      toast({
+        title: "Error updating category",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteCategory = async (id: string) => {
+    try {
+      await api.delete(`/categories/${id}`);
+      setCategories(categories.filter((category) => category.id !== id));
+      toast({
+        title: "Category deleted",
+        description: "Your category has been deleted successfully",
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast({
+        title: "Error deleting category",
+        description: "This category may still be in use by some expenses",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getCategoryById = (id: string) => {
     return categories.find((category) => category.id === id);
   };
@@ -281,6 +371,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({
         getMonthlyTotalsByCategory,
         searchExpenses,
         getCategoryById,
+        loading,
       }}
     >
       {children}

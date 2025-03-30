@@ -9,9 +9,30 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { format, subMonths } from "date-fns";
+import { Loader2 } from "lucide-react";
 
 const DashboardStats: React.FC = () => {
-  const { expenses, getTotalByMonth } = useExpense();
+  const { expenses, getTotalByMonth, getCategoryById, loading } = useExpense();
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading...
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-muted/50 rounded animate-pulse"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   // Calculate total expenses
   const totalExpenses = expenses.reduce(
@@ -48,6 +69,8 @@ const DashboardStats: React.FC = () => {
       mostExpensiveCategoryId = categoryId;
     }
   });
+
+  const biggestCategory = getCategoryById(mostExpensiveCategoryId);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -108,11 +131,7 @@ const DashboardStats: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {mostExpensiveCategoryId
-              ? expenses
-                  .find((e) => e.categoryId === mostExpensiveCategoryId)
-                  ?.categoryId
-              : "None"}
+            {biggestCategory ? biggestCategory.name : "None"}
           </div>
           <p className="text-xs text-muted-foreground">
             ${highestAmount.toFixed(2)}

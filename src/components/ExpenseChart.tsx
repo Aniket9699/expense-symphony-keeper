@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useExpense } from "@/context/ExpenseContext";
 import {
@@ -24,6 +23,7 @@ import {
 } from "recharts";
 import { format, parseISO } from "date-fns";
 import { ValueType } from "recharts/types/component/DefaultTooltipContent";
+import { Loader2 } from "lucide-react";
 
 const monthFormatter = (month: string) => {
   try {
@@ -57,7 +57,28 @@ const ExpenseChart: React.FC = () => {
     categories,
     getMonthlyTotals,
     getExpensesByCategory,
+    loading
   } = useExpense();
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {[...Array(2)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading...
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] bg-muted/20 rounded animate-pulse"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   // Get data for monthly chart
   const monthlyData = getMonthlyTotals();
