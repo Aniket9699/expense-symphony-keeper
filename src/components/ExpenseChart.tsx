@@ -41,6 +41,14 @@ const formatValue = (value: ValueType): string => {
   return `$${value}`;
 };
 
+// Color palette constants
+const COLORS = {
+  primary: "#F7374F",
+  secondary: "#88304E",
+  accent: "#522546",
+  dark: "#2C2C2C"
+};
+
 const ExpenseChart: React.FC = () => {
   const {
     expenses,
@@ -92,17 +100,19 @@ const ExpenseChart: React.FC = () => {
                     bottom: 5,
                   }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                   <XAxis
                     dataKey="month"
                     tickFormatter={monthFormatter}
+                    stroke={COLORS.dark}
                   />
-                  <YAxis />
+                  <YAxis stroke={COLORS.dark} />
                   <Tooltip
                     formatter={(value: ValueType) => [formatValue(value), "Amount"]}
                     labelFormatter={monthFormatter}
+                    contentStyle={{ backgroundColor: "#fff", borderColor: COLORS.secondary }}
                   />
-                  <Bar dataKey="amount" fill="#0EA5E9" />
+                  <Bar dataKey="amount" fill={COLORS.primary} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -130,7 +140,7 @@ const ExpenseChart: React.FC = () => {
                     cy="50%"
                     labelLine={false}
                     outerRadius={80}
-                    fill="#8884d8"
+                    fill={COLORS.secondary}
                     dataKey="value"
                     nameKey="name"
                     label={({ name, percent }) =>
@@ -143,8 +153,13 @@ const ExpenseChart: React.FC = () => {
                   </Pie>
                   <Tooltip
                     formatter={(value: ValueType) => [formatValue(value), "Amount"]}
+                    contentStyle={{ backgroundColor: "#fff", borderColor: COLORS.secondary }}
                   />
-                  <Legend />
+                  <Legend 
+                    formatter={(value, entry) => (
+                      <span style={{ color: COLORS.dark }}>{value}</span>
+                    )}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
