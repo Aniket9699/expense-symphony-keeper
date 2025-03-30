@@ -1,0 +1,152 @@
+
+import React from "react";
+import { useExpense } from "@/context/ExpenseContext";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
+import { format, parseISO } from "date-fns";
+
+const monthFormatter = (month: string) => {
+  try {
+    return format(parseISO(`${month}-01`), "MMM yyyy");
+  } catch {
+    return month;
+  }
+};
+
+const ExpenseChart: React.FC = () => {
+  const {
+    expenses,
+    categories,
+    getMonthlyTotals,
+    getExpensesByCategory,
+  } = useExpense();
+
+  // Get data for monthly chart
+  const monthlyData = getMonthlyTotals();
+
+  // Get data for category chart
+  const categoryData = categories.map((category) => {
+    const categoryExpenses = getExpensesByCategory(category.id);
+    const total = categoryExpenses.reduce(
+      (sum, expense) => sum + expense.amount,
+      0
+    );
+    return {
+      name: category.name,
+      value: total,
+      color: category.color,
+    };
+  });
+
+  // Calculate total expenses
+  const totalExpenses = expenses.reduce(
+    (sum, expense) => sum + expense.amount,
+    0
+  );
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Spending</CardTitle>
+          <CardDescription>Your expenses over time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px]">
+            {monthlyData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={monthlyData}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="month"
+                    tickFormatter={monthFormatter}
+                  />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value) => [`$${value.toFixed(2)}`, "Amount"]}
+                    labelFormatter={monthFormatter}
+                  />
+                  <Bar dataKey="amount" fill="#0EA5E9" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <p className="text-gray-500">No data available</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Spending by Category</CardTitle>
+          <CardDescription>How your money is distributed</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px]">
+            {totalExpenses > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categoryData.filter((item) => item.value > 0)}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    nameKey="name"
+                    label={({ name, percent }) =>
+                      `${name}: ${(percent * 100).toFixed(0)}%`
+                    }
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => [`$${value.toFixed(2)}`, "Amount"]}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <p className="text-gray-500">No data available</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ExpenseChart;
