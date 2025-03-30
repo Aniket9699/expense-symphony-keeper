@@ -20,8 +20,10 @@ import {
   Pie,
   Cell,
   Legend,
+  TooltipProps,
 } from "recharts";
 import { format, parseISO } from "date-fns";
+import { ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 const monthFormatter = (month: string) => {
   try {
@@ -29,6 +31,14 @@ const monthFormatter = (month: string) => {
   } catch {
     return month;
   }
+};
+
+// Helper function to format values that might be strings or numbers
+const formatValue = (value: ValueType): string => {
+  if (typeof value === 'number') {
+    return `$${value.toFixed(2)}`;
+  }
+  return `$${value}`;
 };
 
 const ExpenseChart: React.FC = () => {
@@ -89,7 +99,7 @@ const ExpenseChart: React.FC = () => {
                   />
                   <YAxis />
                   <Tooltip
-                    formatter={(value) => [`$${value.toFixed(2)}`, "Amount"]}
+                    formatter={(value: ValueType) => [formatValue(value), "Amount"]}
                     labelFormatter={monthFormatter}
                   />
                   <Bar dataKey="amount" fill="#0EA5E9" />
@@ -132,7 +142,7 @@ const ExpenseChart: React.FC = () => {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value) => [`$${value.toFixed(2)}`, "Amount"]}
+                    formatter={(value: ValueType) => [formatValue(value), "Amount"]}
                   />
                   <Legend />
                 </PieChart>
