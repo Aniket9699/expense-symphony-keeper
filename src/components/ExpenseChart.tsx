@@ -46,7 +46,9 @@ const COLORS = {
   primary: "#F7374F",
   secondary: "#88304E",
   accent: "#522546",
-  dark: "#2C2C2C"
+  dark: "#2C2C2C",
+  text: "#FFFFFF",
+  gridLines: "rgba(255, 255, 255, 0.1)"
 };
 
 const ExpenseChart: React.FC = () => {
@@ -100,24 +102,24 @@ const ExpenseChart: React.FC = () => {
                     bottom: 5,
                   }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} stroke={COLORS.gridLines} />
                   <XAxis
                     dataKey="month"
                     tickFormatter={monthFormatter}
-                    stroke={COLORS.dark}
+                    stroke={COLORS.text}
                   />
-                  <YAxis stroke={COLORS.dark} />
+                  <YAxis stroke={COLORS.text} />
                   <Tooltip
                     formatter={(value: ValueType) => [formatValue(value), "Amount"]}
                     labelFormatter={monthFormatter}
-                    contentStyle={{ backgroundColor: "#fff", borderColor: COLORS.secondary }}
+                    contentStyle={{ backgroundColor: COLORS.dark, borderColor: COLORS.secondary, color: COLORS.text }}
                   />
                   <Bar dataKey="amount" fill={COLORS.primary} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center">
-                <p className="text-gray-500">No data available</p>
+                <p className="text-gray-400">No data available</p>
               </div>
             )}
           </div>
@@ -153,18 +155,18 @@ const ExpenseChart: React.FC = () => {
                   </Pie>
                   <Tooltip
                     formatter={(value: ValueType) => [formatValue(value), "Amount"]}
-                    contentStyle={{ backgroundColor: "#fff", borderColor: COLORS.secondary }}
+                    contentStyle={{ backgroundColor: COLORS.dark, borderColor: COLORS.secondary, color: COLORS.text }}
                   />
                   <Legend 
                     formatter={(value, entry) => (
-                      <span style={{ color: COLORS.dark }}>{value}</span>
+                      <span style={{ color: COLORS.text }}>{value}</span>
                     )}
                   />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center">
-                <p className="text-gray-500">No data available</p>
+                <p className="text-gray-400">No data available</p>
               </div>
             )}
           </div>
