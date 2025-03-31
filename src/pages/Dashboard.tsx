@@ -12,7 +12,7 @@ import { Plus, Search } from "lucide-react";
 import CategoryList from "@/components/CategoryList";
 
 const Dashboard: React.FC = () => {
-  const { expenses, searchExpenses } = useExpense();
+  const { expenses, searchExpenses, loading } = useExpense();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
@@ -58,7 +58,11 @@ const Dashboard: React.FC = () => {
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">All Expenses</h2>
             </div>
-            <ExpenseList expenses={expenses} />
+            {loading ? (
+              <div className="text-center py-6">Loading expenses...</div>
+            ) : (
+              <ExpenseList expenses={expenses} />
+            )}
           </div>
         </TabsContent>
         <TabsContent value="expenses">
@@ -73,7 +77,11 @@ const Dashboard: React.FC = () => {
               />
             </div>
           </div>
-          <ExpenseList expenses={filteredExpenses} searchQuery={searchQuery} />
+          {loading ? (
+            <div className="text-center py-6">Loading expenses...</div>
+          ) : (
+            <ExpenseList expenses={filteredExpenses} searchQuery={searchQuery} />
+          )}
         </TabsContent>
         <TabsContent value="categories">
           <CategoryList />

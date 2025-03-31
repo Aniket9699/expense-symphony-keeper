@@ -1,5 +1,6 @@
 
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const API_URL = 'http://localhost:3001/api';
 
@@ -7,7 +8,9 @@ const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  // Increase timeout for potentially large data queries
+  timeout: 10000
 });
 
 // Add request interceptor to include auth token in requests
@@ -20,6 +23,21 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Add response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ECONNABORTED' || !error.response) {
+      toast.error('Connection to server failed. Please check your database connection.');
+      console.error('API Connection Error:', error);
+    } else if (error.response.status === 500) {
+      toast.error('Server error. Please try again later.');
+      console.error('Server Error:', error.response.data);
+    }
+    return Promise.reject(error);
+  }
 );
 
 // Auth services

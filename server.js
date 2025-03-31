@@ -1,4 +1,3 @@
-
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
@@ -163,7 +162,6 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
   }
 });
 
-// Update API endpoints to use authentication
 // API endpoints for expenses
 app.get('/api/expenses', authenticateToken, async (req, res) => {
   try {
