@@ -56,15 +56,9 @@ const Dashboard: React.FC = () => {
           <ExpenseChart />
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Recent Expenses</h2>
-              <Button 
-                variant="link" 
-                onClick={() => setActiveTab("expenses")}
-              >
-                View All
-              </Button>
+              <h2 className="text-2xl font-semibold">All Expenses</h2>
             </div>
-            <ExpenseList expenses={expenses.slice(0, 5)} />
+            <ExpenseList expenses={expenses} />
           </div>
         </TabsContent>
         <TabsContent value="expenses">

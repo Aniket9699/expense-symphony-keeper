@@ -53,11 +53,11 @@ const Register: React.FC = () => {
   };
   
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md bg-card">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-muted-foreground">
             Enter your information to create an account
           </CardDescription>
         </CardHeader>
@@ -71,7 +71,7 @@ const Register: React.FC = () => {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="johndoe" {...field} />
+                      <Input placeholder="johndoe" {...field} className="bg-card border-input" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -85,7 +85,7 @@ const Register: React.FC = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="your@email.com" {...field} />
+                      <Input placeholder="your@email.com" {...field} className="bg-card border-input" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -99,7 +99,7 @@ const Register: React.FC = () => {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="******" {...field} />
+                      <Input type="password" placeholder="******" {...field} className="bg-card border-input" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -113,7 +113,7 @@ const Register: React.FC = () => {
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="******" {...field} />
+                      <Input type="password" placeholder="******" {...field} className="bg-card border-input" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -122,7 +122,7 @@ const Register: React.FC = () => {
               
               <Button 
                 type="submit" 
-                className="w-full"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                 disabled={loading}
               >
                 {loading ? (
@@ -136,7 +136,7 @@ const Register: React.FC = () => {
           </Form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <div className="text-center text-sm text-gray-500">
+          <div className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
             <Link to="/login" className="font-medium text-primary hover:underline">
               Sign in
